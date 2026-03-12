@@ -55,6 +55,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${LINKER_FLAGS}" CACHE INTERNAL "Linker Flags")
 set(SOURCES
     "${CMAKE_SOURCE_DIR}/startup_stm32f411ceux.s"
     "${CMAKE_SOURCE_DIR}/src/main.c"
+    "${CMAKE_SOURCE_DIR}/Drivers/mpu6050/mpu6050.c"
 )
 
 # CREACIÓN DEL EJECUTABLE (El archivo .elf)
@@ -65,6 +66,7 @@ target_include_directories(${PROJECT_NAME}.elf PRIVATE
     "${CMAKE_SOURCE_DIR}/inc"
     "${CMAKE_SOURCE_DIR}/Drivers/cmsis_core/Include"
     "${CMAKE_SOURCE_DIR}/Drivers/cmsis_device_f4/Include"
+    "${CMAKE_SOURCE_DIR}/Drivers/mpu6050"
 )
 
 # Definir el modelo exacto del microcontrolador para este target.
