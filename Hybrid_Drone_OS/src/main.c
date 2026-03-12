@@ -10,12 +10,12 @@ void LED_Init(void);
 
 // ===== Main =====
 int main(void) {
-    SysTick_Config(SystemCoreClock / 1000); // Configure SysTick for 1ms interrupts
+    SysTick_Config(16000); // Configure SysTick for 1ms interrupts
     LED_Init(); // Initialize the LED
 
     while (1) {
         GPIOC->ODR ^= (1 << 13); // Toggle LED on PC13
-        delay_ms(500); // Delay for 500ms
+        delay_ms(1000); // Delay for 1000ms
     }
 }
 
