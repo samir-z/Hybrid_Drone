@@ -1,0 +1,17 @@
+# ===== Build Directories =====
+build/
+.cache/
+
+# ===== Binaries =====
+*.elf
+*.bin
+*.hex
+*.map
+
+# ===== Python cache and madim animation =====
+__pycache__/
+*.pyc
+media/
+
+# ===== Temporary files =====
+.vscode/
