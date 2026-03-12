@@ -9,6 +9,7 @@ uint32_t SystemCoreClock = 16000000; // System clock frequency (16 MHz)
 // ===== Functions =====
 void SysTick_Handler(void);
 void SystemClock_Config(void);
+void FPU_Enable(void);
 void delay_ms(uint32_t ms);
 void LED_Init(void);
 void UART1_Init(void);
@@ -23,9 +24,10 @@ uint8_t I2C1_Read_Burst(uint8_t address, uint8_t reg, uint8_t *buf, uint8_t leng
 
 // ===== Main =====
 int main(void) {
-    // Configure the system clock to 100 MHz and SysTick for 1ms interrupts
+    // Configure main system components
     SystemClock_Config(); // Configure the system clock
     SysTick_Config(SystemCoreClock / 1000); // Configure SysTick for 1ms interrupts
+    FPU_Enable(); // Enable the FPU before any float operations
 
     // Initialize peripherals
     LED_Init(); // Initialize the LED
@@ -34,12 +36,14 @@ int main(void) {
     I2C1_Init(); // Initialize I2C1
     while (!(I2C1_Ping(MPU6050_I2C_ADDR)))
     {
+        I2C1_Init(); // Re-initialize I2C1 in case of bus issues
         UART1_SendString("MPU6050 not found\r\n");
         delay_ms(1000); // Wait before retrying
     }
     UART1_SendString("MPU6050 found\r\n");
     while (MPU6050_Init() == MPU6050_ERR)
     {
+        I2C1_Init(); // Re-initialize I2C1 in case of bus issues        
         UART1_SendString("MPU6050 initialization failed\r\n");
         delay_ms(1000); // Wait before retrying
     }
@@ -92,6 +96,11 @@ void SystemClock_Config(void) {
     RCC->CFGR |= (2 << 0); // Select PLL as system clock
     while ((RCC->CFGR & (3 << 2)) != (2 << 2)); // Wait until PLL is used as system clock
     SystemCoreClock = 100000000; // Update SystemCoreClock variable
+}
+
+// ===== FPU Enable =====
+void FPU_Enable(void) {
+    SCB->CPACR |= (0xF << 20); // Enable CP10 and CP11 full access
 }
 
 // ===== Delay function =====
