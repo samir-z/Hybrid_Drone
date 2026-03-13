@@ -16,6 +16,7 @@ void UART1_Init(void);
 void UART1_SendChar(char c);
 void UART1_SendString(const char* str);
 void UART1_SendInt(int32_t num);
+void UART1_SendFloat(float f, uint8_t decimals_places);
 void I2C1_Init(void);
 uint8_t I2C1_Ping(uint8_t address);
 uint8_t I2C1_Write_Reg(uint8_t address, uint8_t reg, uint8_t data);
@@ -56,11 +57,11 @@ int main(void) {
             MPU6050_Scale(&sensor_data); // Scale raw data to physical units
             // Send scaled data over UART (for demonstration)
             UART1_SendString("Accel (m/s²): X=");
-            UART1_SendInt((int32_t)(sensor_data.accel_x_ms2 * 100)); // Send as integer with 2 decimal places
+            UART1_SendFloat(sensor_data.accel_x_ms2, 2); // Send as float with 2 decimal places
             UART1_SendString(" Y=");
-            UART1_SendInt((int32_t)(sensor_data.accel_y_ms2 * 100));
+            UART1_SendFloat(sensor_data.accel_y_ms2, 2);
             UART1_SendString(" Z=");
-            UART1_SendInt((int32_t)(sensor_data.accel_z_ms2 * 100));
+            UART1_SendFloat(sensor_data.accel_z_ms2, 2);
             UART1_SendString("\r\n");
         } else {
             UART1_SendString("Failed to read from MPU6050\r\n");
@@ -167,6 +168,27 @@ void UART1_SendInt(int32_t num) {
     }
 }
 
+// ===== UART1 Send Float =====
+void UART1_SendFloat(float f, uint8_t decimal_places) {
+    if (f < 0.0f) { // Handle negative numbers
+        UART1_SendChar('-');    // Send the negative sign
+        f = -f; // Convert to positive for processing
+    }
+    int32_t int_part = (int32_t)f;  // Extract the integer part of the float
+    float remainder = f - (float)int_part;  // Calculate the decimal part (remainder)
+    UART1_SendInt(int_part);
+    if (decimal_places > 0) {
+        UART1_SendChar('.');
+        while (decimal_places > 0) {
+            remainder *= 10.0f; // Move the next decimal digit into the integer part for extraction (0.81 * 10 = 8.1)
+            int32_t digit = (int32_t)remainder; // Extract that integer (8)
+            UART1_SendChar(digit + '0'); // Convert it to text and send it
+            remainder -= (float)digit; // Remove it from the remainder (8.1 - 8 = 0.1) for the next iteration
+            decimal_places--;
+        }
+    }
+}
+
 // ===== I2C1 Initialization =====
 void I2C1_Init(void) {
     RCC->APB1ENR |= RCC_APB1ENR_I2C1EN; // Enable I2C1 clock
@@ -181,8 +203,8 @@ void I2C1_Init(void) {
     GPIOB->AFR[0] &= ~((0xF << 24) | (0xF << 28)); // Clear alternate function bits for PB6 and PB7
     GPIOB->AFR[0] |= (4 << 24) | (4 << 28); // Set alternate function to I2C1 for PB6 and PB7
     I2C1->CR2 = 50; // Set APB1 clock frequency to 50 MHz
-    I2C1->CCR = 250; // Set I2C clock speed to 100 kHz
-    I2C1->TRISE = 51; // Set maximum rise time for 100 kHz
+    I2C1->CCR = (1 << 15) | (1 << 14) | 5; // Set I2C clock speed to 400 kHz
+    I2C1->TRISE = 16; // Set maximum rise time for 400 kHz
     I2C1->CR1 = I2C_CR1_PE; // Enable I2C1
 }
 
