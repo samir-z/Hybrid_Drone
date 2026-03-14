@@ -1,3 +1,18 @@
+/*
+    * Hybrid_Drone_OS - Main application file
+    Author: Joshua (Samir Zambrano)
+    Project: Hybrid_Drone_OS
+    Pins:
+        - LED: PC13
+        - UART1: PA9 (TX), PA10 (RX)
+        - I2C1: PB6 (SCL), PB7 (SDA)
+        - PWM Outputs for motors: PA0 (CH1), PA1 (CH2), PA2 (CH3), PA3 (CH4)
+    Peripherals used:
+        - SysTick for system timing
+        - UART1 for communication with ground station
+        - I2C1 for communication with MPU6050 sensor
+        - TIM2 for generating PWM signals for motor control
+*/
 #include "stm32f4xx.h"
 #include <stdbool.h>
 #include "mpu6050.h"
@@ -22,6 +37,8 @@ uint8_t I2C1_Ping(uint8_t address);
 uint8_t I2C1_Write_Reg(uint8_t address, uint8_t reg, uint8_t data);
 uint8_t I2C1_Read_Reg(uint8_t address, uint8_t reg);
 uint8_t I2C1_Read_Burst(uint8_t address, uint8_t reg, uint8_t *buf, uint8_t length);
+void PWM_Init(void);
+void PWM_SetDutyCycle(uint8_t channel, uint16_t duty_cycle);
 
 // ===== Main =====
 int main(void) {
@@ -33,15 +50,16 @@ int main(void) {
     // Initialize peripherals
     LED_Init(); // Initialize the LED
     UART1_Init(); // Initialize UART1
-    UART1_SendString("UART OK\r\n"); // Send a test message over UART
     I2C1_Init(); // Initialize I2C1
-    while (!(I2C1_Ping(MPU6050_I2C_ADDR)))
-    {
-        I2C1_Init(); // Re-initialize I2C1 in case of bus issues
-        UART1_SendString("MPU6050 not found\r\n");
-        delay_ms(1000); // Wait before retrying
-    }
-    UART1_SendString("MPU6050 found\r\n");
+    PWM_Init(); // Initialize PWM for motor control
+
+    UART1_SendString("===== System initialized =====\r\n"); // Send an initial message
+    UART1_SendString("System Clock: 100 MHz\r\n");
+    UART1_SendString("SysTick configured for 1 ms ticks\r\n");
+    UART1_SendString("FPU enabled\r\n");
+    
+    // Try to initialize the MPU6050 sensor, retrying if it fails (e.g., due to I2C bus issues)
+    UART1_SendString("Initializing MPU6050...\r\n");
     while (MPU6050_Init() == MPU6050_ERR)
     {
         I2C1_Init(); // Re-initialize I2C1 in case of bus issues        
@@ -50,23 +68,53 @@ int main(void) {
     }
     UART1_SendString("MPU6050 initialized\r\n");
 
+    // ===== Initial variables =====
+    uint16_t pwm_duty_cycle = 500; // Initial PWM duty cycle (10%)
+    uint16_t pwm_duty_cycle_cmd = 0; // Variable to hold the commanded duty cycle from UART input
+    uint32_t last_telemetry_time = system_ticks; // Timestamp for the last telemetry update
+
+    // Set initial PWM duty cycle for all channels
+    UART1_SendString("Setting initial PWM duty cycle to 10%\r\n");
+    for (uint8_t ch = 1; ch <= 4; ch++) {
+        PWM_SetDutyCycle(ch, pwm_duty_cycle);
+    }
+
+    UART1_SendString("Entering main loop. Send digits followed by Enter to set CH1 duty cycle (0-1000 for 0-100%)\r\n");
+
     // Main loop
     while (1) {
-        MPU6050_Data_t sensor_data;
-        if (MPU6050_Read(&sensor_data) == MPU6050_OK) {
-            MPU6050_Scale(&sensor_data); // Scale raw data to physical units
-            // Send scaled data over UART (for demonstration)
-            UART1_SendString("Accel (m/s²): X=");
-            UART1_SendFloat(sensor_data.accel_x_ms2, 2); // Send as float with 2 decimal places
-            UART1_SendString(" Y=");
-            UART1_SendFloat(sensor_data.accel_y_ms2, 2);
-            UART1_SendString(" Z=");
-            UART1_SendFloat(sensor_data.accel_z_ms2, 2);
-            UART1_SendString("\r\n");
-        } else {
-            UART1_SendString("Failed to read from MPU6050\r\n");
+        // UART command handling (non-blocking)
+        if (USART1->SR & USART_SR_RXNE) { // Check if data is available to read
+            char cmd = USART1->DR; // Read the received character
+            UART1_SendChar(cmd); // Echo the received character back for confirmation
+
+            if (cmd >= '0' && cmd <= '9') {
+                pwm_duty_cycle_cmd = (pwm_duty_cycle_cmd * 10) + (cmd - '0'); // Build the duty cycle command from received digits
+            }
+            else if (cmd == '\r' || cmd == '\n') {  // If the command is complete (Enter key), process it
+                UART1_SendString("\r\n[SYS] Setting CH1 duty cycle to "); // Move to the next line after receiving the command
+                UART1_SendInt(pwm_duty_cycle_cmd);
+                UART1_SendString("\r\n");
+
+                PWM_SetDutyCycle(1, pwm_duty_cycle_cmd); // Set the duty cycle for channel 1 based on the received command
+                pwm_duty_cycle_cmd = 0; // Reset the command variable for the next input
+            }
         }
-        delay_ms(500); // Wait before the next read
+
+        // Periodic telemetry update every 500 ms
+        if ((system_ticks - last_telemetry_time) >= 500) {
+            MPU6050_Data_t sensor_data;
+            if (MPU6050_Read(&sensor_data) == MPU6050_OK) {
+                MPU6050_Scale(&sensor_data); // Scale raw data to physical units
+                // Send scaled data over UART (for demonstration)
+                UART1_SendString("Accel: Z=");
+                UART1_SendFloat(sensor_data.accel_z_ms2, 2);
+                UART1_SendString(" m/s² \r\n");
+            } else {
+                UART1_SendString("Failed to read from MPU6050\r\n");
+            }
+            last_telemetry_time = system_ticks; // Update the timestamp for the last telemetry update
+        }
     }
 }
 
@@ -456,4 +504,41 @@ uint8_t I2C1_Read_Burst(uint8_t address, uint8_t reg, uint8_t *buf, uint8_t leng
         }
     }
     return 1; // All bytes read successfully
+}
+
+// ===== PWM Initialization =====
+void PWM_Init(void) {
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; // Enable GPIOA clock
+    GPIOA->MODER &= ~((3 << 0) | (3 << 2) | (3 << 4) | (3 << 6)); // Clear mode bits for PA0-PA3
+    GPIOA->MODER |= (2 << 0) | (2 << 2) | (2 << 4) | (2 << 6); // Set mode bits for PA0-PA3 as alternate function
+    GPIOA->AFR[0] &= ~((0xF << 0) | (0xF << 4) | (0xF << 8) | (0xF << 12)); // Clear alternate function bits for PA0-PA3
+    GPIOA->AFR[0] |= (1 << 0) | (1 << 4) | (1 << 8) | (1 << 12); // Set alternate function to TIM2 for PA0-PA3
+    RCC->APB1ENR |= RCC_APB1ENR_TIM2EN; // Enable TIM2 clock
+    TIM2->PSC = 1 - 1; // Set prescaler to 1 (assuming 100 MHz clock, gives 100 MHz timer clock)
+    TIM2->ARR = 5000 - 1; // Set auto-reload for 20 kHz PWM frequency (100 MHz / 5000 = 20 kHz)
+    TIM2->CCMR1 = (6 << 4) | (1 << 3) | (6 << 12) | (1 << 11); // Set PWM mode 1 for channels 1 and 2 and enable preload
+    TIM2->CCMR2 = (6 << 4) | (1 << 3) | (6 << 12) | (1 << 11); // Set PWM mode 1 for channels 3 and 4 and enable preload
+    TIM2->CCER = TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E; // Enable output for channels 1-4
+    TIM2->CR1 |= TIM_CR1_CEN; // Start the timer
+}
+
+// ===== PWM Set Duty Cycle =====
+void PWM_SetDutyCycle(uint8_t channel, uint16_t duty_cycle) {
+    if (duty_cycle > 5000) duty_cycle = 5000; // Limit duty cycle to 100% (ARR value)
+    switch (channel) {
+        case 1:
+            TIM2->CCR1 = duty_cycle; // Set duty cycle for channel 1
+            break;
+        case 2:
+            TIM2->CCR2 = duty_cycle; // Set duty cycle for channel 2
+            break;
+        case 3:
+            TIM2->CCR3 = duty_cycle; // Set duty cycle for channel 3
+            break;
+        case 4:
+            TIM2->CCR4 = duty_cycle; // Set duty cycle for channel 4
+            break;
+        default:
+            break; // Invalid channel, do nothing
+    }
 }
