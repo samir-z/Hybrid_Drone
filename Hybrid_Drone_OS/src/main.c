@@ -38,7 +38,7 @@ int main(void) {
     PWM_Init(); // Initialize PWM for motor control
 
     // Initialize the complementary filter
-    CF_Init(&filter, 0.95f); // Initialize with a filter coefficient of 0.95
+    CF_Init(&filter, 0.98f); // Initialize with a filter coefficient of 0.98
 
     UART1_SendString("===== System initialized =====\r\n"); // Send an initial message
     UART1_SendString("System Clock: 100 MHz\r\n");
@@ -98,6 +98,18 @@ int main(void) {
                 // Send scaled data over UART (for demonstration)
                 UART1_SendString("T:");
                 UART1_SendInt(system_ticks); // Send the current system tick count as a timestamp
+                UART1_SendString(",Ax:");
+                UART1_SendFloat(sensor_data.accel_x_ms2, 2);
+                UART1_SendString(",Ay:");
+                UART1_SendFloat(sensor_data.accel_y_ms2, 2);
+                UART1_SendString(",Az:");
+                UART1_SendFloat(sensor_data.accel_z_ms2, 2);
+                UART1_SendString(",Gx:");
+                UART1_SendFloat(sensor_data.gyro_x_dps, 2);
+                UART1_SendString(",Gy:");
+                UART1_SendFloat(sensor_data.gyro_y_dps, 2);
+                UART1_SendString(",Gz:");
+                UART1_SendFloat(sensor_data.gyro_z_dps, 2);
                 UART1_SendString(",P:");
                 UART1_SendFloat(filter.pitch, 2);
                 UART1_SendString(",R:");
