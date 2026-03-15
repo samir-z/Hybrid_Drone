@@ -56,6 +56,10 @@ set(SOURCES
     "${CMAKE_SOURCE_DIR}/startup_stm32f411ceux.s"
     "${CMAKE_SOURCE_DIR}/src/main.c"
     "${CMAKE_SOURCE_DIR}/Drivers/mpu6050/mpu6050.c"
+    "${CMAKE_SOURCE_DIR}/src/clock.c"
+    "${CMAKE_SOURCE_DIR}/src/uart.c"
+    "${CMAKE_SOURCE_DIR}/src/i2c.c"
+    "${CMAKE_SOURCE_DIR}/src/pwm.c"
 )
 
 # CREACIÓN DEL EJECUTABLE (El archivo .elf)

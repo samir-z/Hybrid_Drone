@@ -20,7 +20,7 @@
  *  - Return values : MPU6050_OK (1) / MPU6050_ERR (0)
  *  - Physical units: acceleration in m/s², angular rate in °/s, temperature in °C.
  *
- * @author  MechaCore Firmware Team
+ * @author  Joshua (Samir Zambrano)
  * @standard JPL C Coding Standard / MISRA-C:2012 (advisory deviations noted)
  */
 
