@@ -1,3 +1,6 @@
+% =========================================================================
+%                     Script de Calibración MPU6050
+% =========================================================================
 clc; clear; close all;
 
 % LEER LOS DATOS (Ignorando las etiquetas de texto)
