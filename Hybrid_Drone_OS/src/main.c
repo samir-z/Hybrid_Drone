@@ -20,6 +20,10 @@
 #include "uart.h"
 #include "i2c.h"
 #include "pwm.h"
+#include "imu_filter.h"
+
+// Global variables
+CF_State_t filter; // Complementary filter state
 
 // ===== Main =====
 int main(void) {
@@ -32,6 +36,9 @@ int main(void) {
     UART1_Init(); // Initialize UART1
     I2C1_Init(); // Initialize I2C1
     PWM_Init(); // Initialize PWM for motor control
+
+    // Initialize the complementary filter
+    CF_Init(&filter, 0.95f); // Initialize with a filter coefficient of 0.95
 
     UART1_SendString("===== System initialized =====\r\n"); // Send an initial message
     UART1_SendString("System Clock: 100 MHz\r\n");
@@ -87,21 +94,14 @@ int main(void) {
             MPU6050_Data_t sensor_data;
             if (MPU6050_Read(&sensor_data) == MPU6050_OK) {
                 MPU6050_Scale(&sensor_data); // Scale raw data to physical units
+                CF_Update(&filter, &sensor_data, system_ticks); // Update the complementary filter with new sensor data
                 // Send scaled data over UART (for demonstration)
                 UART1_SendString("T:");
                 UART1_SendInt(system_ticks); // Send the current system tick count as a timestamp
-                UART1_SendString(",AX:");
-                UART1_SendFloat(sensor_data.accel_x_ms2, 2);
-                UART1_SendString(",AY:");
-                UART1_SendFloat(sensor_data.accel_y_ms2, 2);
-                UART1_SendString(",AZ:");
-                UART1_SendFloat(sensor_data.accel_z_ms2, 2);
-                UART1_SendString(",GX:");
-                UART1_SendFloat(sensor_data.gyro_x_dps, 2);
-                UART1_SendString(",GY:");
-                UART1_SendFloat(sensor_data.gyro_y_dps, 2);
-                UART1_SendString(",GZ:");
-                UART1_SendFloat(sensor_data.gyro_z_dps, 2);
+                UART1_SendString(",P:");
+                UART1_SendFloat(filter.pitch, 2);
+                UART1_SendString(",R:");
+                UART1_SendFloat(filter.roll, 2);
                 UART1_SendString("\r\n");
             } else {
                 UART1_SendString("Failed to read from MPU6050\r\n");

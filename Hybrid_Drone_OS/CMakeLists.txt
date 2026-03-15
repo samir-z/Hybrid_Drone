@@ -60,6 +60,7 @@ set(SOURCES
     "${CMAKE_SOURCE_DIR}/src/uart.c"
     "${CMAKE_SOURCE_DIR}/src/i2c.c"
     "${CMAKE_SOURCE_DIR}/src/pwm.c"
+    "${CMAKE_SOURCE_DIR}/src/imu_filter.c"
 )
 
 # CREACIÓN DEL EJECUTABLE (El archivo .elf)
@@ -77,6 +78,9 @@ target_include_directories(${PROJECT_NAME}.elf PRIVATE
 # target_compile_definitions (no add_compile_definitions) → scoped al target,
 # no contamina otros targets que puedas agregar en el futuro (tests, bootloader, libs).
 target_compile_definitions(${PROJECT_NAME}.elf PRIVATE STM32F411xE)
+
+# Enlazamos con la librería matemática (libm) para funciones como atan2f, etc.
+target_link_libraries(${PROJECT_NAME}.elf m)
 
 # POST-CONSTRUCCIÓN (Convertir .elf a .bin)
 # FIX #3: Usar $<TARGET_FILE:...> en vez de ${PROJECT_NAME}.elf relativo.
