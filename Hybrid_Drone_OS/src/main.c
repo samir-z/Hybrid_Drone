@@ -83,6 +83,7 @@ int main(void) {
 
         // Periodic telemetry update every 10 ms
         if ((system_ticks - last_telemetry_time) >= 10) {
+            last_telemetry_time = system_ticks; // Update the timestamp for the last telemetry update
             MPU6050_Data_t sensor_data;
             if (MPU6050_Read(&sensor_data) == MPU6050_OK) {
                 MPU6050_Scale(&sensor_data); // Scale raw data to physical units
@@ -105,7 +106,6 @@ int main(void) {
             } else {
                 UART1_SendString("Failed to read from MPU6050\r\n");
             }
-            last_telemetry_time = system_ticks; // Update the timestamp for the last telemetry update
         }
     }
 }

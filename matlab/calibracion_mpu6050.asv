@@ -1,0 +1,19 @@
+clc; clear; close all;
+
+% LEER LOS DATOS (Ignorando las etiquetas de texto)
+% El formato es: T:123 AX:1.23 AY:2.34 ...
+disp('Leyendo reposo.csv...');
+fid = fopen('reposo.csv', 'r');
+datos = textscan(fid, 'T:%f AX:%f AY:%f AZ:%f GX:%f GY:%f GZ:%f', 'MultipleDelimsAsOne', true);
+fclose(fid);
+
+% EXTRAER VECTORES
+T   = datos{1};
+ax  = datos{2}; ay = datos{3}; az = datos{4};
+gx  = datos{5}; gy = datos{6}; gz = datos{7};
+
+% CALCULO DE ERRORES MEDIOS
+% El acelerómetro Z deberia medir 9.80665 m/s² (gravedad)
+mean_ax = (ax);
+mean_ay = (ay);
+mean_az = (az) - 9.80665;

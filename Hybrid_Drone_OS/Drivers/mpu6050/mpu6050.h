@@ -105,12 +105,12 @@
  *  Sign convention: positive offset shifts sensor reading DOWN by that amount.
  * ========================================================================= */
 
-#define MPU6050_OFFSET_AX       ( 0)   /**< Accelerometer X offset [LSB] */
-#define MPU6050_OFFSET_AY       ( 0)   /**< Accelerometer Y offset [LSB] */
-#define MPU6050_OFFSET_AZ       ( 0)   /**< Accelerometer Z offset [LSB] */
-#define MPU6050_OFFSET_GX       ( 0)   /**< Gyroscope X offset [LSB]     */
-#define MPU6050_OFFSET_GY       ( 0)   /**< Gyroscope Y offset [LSB]     */
-#define MPU6050_OFFSET_GZ       ( 0)   /**< Gyroscope Z offset [LSB]     */
+#define MPU6050_OFFSET_AX       (60)    /**< Accelerometer X offset [LSB] */
+#define MPU6050_OFFSET_AY       (297)   /**< Accelerometer Y offset [LSB] */
+#define MPU6050_OFFSET_AZ       (312)   /**< Accelerometer Z offset [LSB] */
+#define MPU6050_OFFSET_GX       (-253)  /**< Gyroscope X offset [LSB]     */
+#define MPU6050_OFFSET_GY       (-35)   /**< Gyroscope Y offset [LSB]     */
+#define MPU6050_OFFSET_GZ       (38)    /**< Gyroscope Z offset [LSB]     */
 
 /* =========================================================================
  *  RETURN CODES
