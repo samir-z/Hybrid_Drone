@@ -77,8 +77,51 @@ g_pfnVectors:
     .word 0                       /* 0x0034: Reservado */
     .word Default_Handler         /* 0x0038: PendSV Handler */
     .word SysTick_Handler         /* 0x003C: SysTick Handler */
+    .word Default_Handler         /* IRQ0: WWDG */
+    .word Default_Handler         /* IRQ1: PVD */
+    .word Default_Handler         /* IRQ2: TAMP_STAMP */
+    .word Default_Handler         /* IRQ3: RTC_WKUP */
+    .word Default_Handler         /* IRQ4: FLASH */
+    .word Default_Handler         /* IRQ5: RCC */
+    .word Default_Handler         /* IRQ6: EXTI0 */
+    .word Default_Handler         /* IRQ7: EXTI1 */
+    .word Default_Handler         /* IRQ8: EXTI2 */
+    .word Default_Handler         /* IRQ9: EXTI3 */
+    .word Default_Handler         /* IRQ10: EXTI4 */
+    .word Default_Handler         /* IRQ11: DMA1_Stream0 */
+    .word Default_Handler         /* IRQ12: DMA1_Stream1 */
+    .word Default_Handler         /* IRQ13: DMA1_Stream2 */
+    .word Default_Handler         /* IRQ14: DMA1_Stream3 */
+    .word Default_Handler         /* IRQ15: DMA1_Stream4 */
+    .word Default_Handler         /* IRQ16: DMA1_Stream5 */
+    .word Default_Handler         /* IRQ17: DMA1_Stream6 */
+    .word Default_Handler         /* IRQ18: ADC */
+    .word 0                       /* IRQ19: Reservado */
+    .word 0                       /* IRQ20: Reservado */
+    .word 0                       /* IRQ21: Reservado */
+    .word 0                       /* IRQ22: Reservado */
+    .word Default_Handler         /* IRQ23: EXTI9_5 */
+    .word Default_Handler         /* IRQ24: TIM1_BRK_TIM9 */
+    .word Default_Handler         /* IRQ25: TIM1_UP_TIM10 */
+    .word Default_Handler         /* IRQ26: TIM1_TRG_COM_TIM11 */
+    .word Default_Handler         /* IRQ27: TIM1_CC */
+    .word Default_Handler         /* IRQ28: TIM2 */
+    .word Default_Handler         /* IRQ29: TIM3 */
+    .word Default_Handler         /* IRQ30: TIM4 */
+    .word Default_Handler         /* IRQ31: I2C1_EV */
+    .word Default_Handler         /* IRQ32: I2C1_ER */
+    .word Default_Handler         /* IRQ33: I2C2_EV */
+    .word Default_Handler         /* IRQ34: I2C2_ER */
+    .word Default_Handler         /* IRQ35: SPI1 */
+    .word Default_Handler         /* IRQ36: SPI2 */
+    .word USART1_IRQHandler       /* IRQ37: USART1 */
+    .word Default_Handler         /* IRQ38: USART2 */
+    .word Default_Handler         /* IRQ39: USART6 */
+    .word Default_Handler         /* IRQ40: EXTI15_10 */
 
     /* Handler por defecto para atrapar errores */
+    .weak USART1_IRQHandler
+    .thumb_set USART1_IRQHandler, Default_Handler
     .section .text.Default_Handler,"ax",%progbits
 Default_Handler:
     b Default_Handler

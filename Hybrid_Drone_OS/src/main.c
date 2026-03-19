@@ -24,6 +24,8 @@
 
 // Global variables
 CF_State_t filter; // Complementary filter state
+extern volatile uint16_t pwm_duty_cycle_cmd; // Variable to hold the commanded duty cycle from UART input
+extern volatile bool cmd_ready; // Flag to indicate a new command is ready to be processed
 
 // ===== Main =====
 int main(void) {
@@ -56,36 +58,32 @@ int main(void) {
     UART1_SendString("MPU6050 initialized\r\n");
 
     // ===== Initial variables =====
-    uint16_t pwm_duty_cycle = 500; // Initial PWM duty cycle (10%)
-    uint16_t pwm_duty_cycle_cmd = 0; // Variable to hold the commanded duty cycle from UART input
+    uint16_t pwm_duty_cycle = 0; // Initial PWM duty cycle (0%)
     uint32_t last_telemetry_time = system_ticks; // Timestamp for the last telemetry update
 
     // Set initial PWM duty cycle for all channels
-    UART1_SendString("Setting initial PWM duty cycle to 10%\r\n");
+    UART1_SendString("Setting initial PWM duty cycle to 0%\r\n");
     for (uint8_t ch = 1; ch <= 4; ch++) {
         PWM_SetDutyCycle(ch, pwm_duty_cycle);
     }
 
-    UART1_SendString("Entering main loop. Send digits followed by Enter to set CH1 duty cycle (0-1000 for 0-100%)\r\n");
+    UART1_SendString("Entering main loop. Send digits followed by Enter to set CH1-4 duty cycle (0-5000 for 0-100%)\r\n");
 
     // Main loop
     while (1) {
         // UART command handling (non-blocking)
-        if (USART1->SR & USART_SR_RXNE) { // Check if data is available to read
-            char cmd = USART1->DR; // Read the received character
-            UART1_SendChar(cmd); // Echo the received character back for confirmation
+        if (cmd_ready) {
+            // Echo the received command back to the user
+            UART1_SendString("\r\n[SYS] Setting CH1-4 duty cycle to ");
+            UART1_SendInt(pwm_duty_cycle_cmd);
+            UART1_SendString("\r\n");
 
-            if (cmd >= '0' && cmd <= '9') {
-                pwm_duty_cycle_cmd = (pwm_duty_cycle_cmd * 10) + (cmd - '0'); // Build the duty cycle command from received digits
+            for (uint8_t ch = 1; ch <= 4; ch++) {
+                PWM_SetDutyCycle(ch, pwm_duty_cycle_cmd);
             }
-            else if (cmd == '\r' || cmd == '\n') {  // If the command is complete (Enter key), process it
-                UART1_SendString("\r\n[SYS] Setting CH1 duty cycle to "); // Move to the next line after receiving the command
-                UART1_SendInt(pwm_duty_cycle_cmd);
-                UART1_SendString("\r\n");
-
-                PWM_SetDutyCycle(1, pwm_duty_cycle_cmd); // Set the duty cycle for channel 1 based on the received command
-                pwm_duty_cycle_cmd = 0; // Reset the command variable for the next input
-            }
+            
+            pwm_duty_cycle_cmd = 0;
+            cmd_ready = false;
         }
 
         // Periodic telemetry update every 10 ms
@@ -110,7 +108,7 @@ int main(void) {
                 UART1_SendFloat(sensor_data.gyro_y_dps, 2);
                 UART1_SendString(",Gz:");
                 UART1_SendFloat(sensor_data.gyro_z_dps, 2);
-                UART1_SendString(",P:");
+                UART1_SendString(",P:");y
                 UART1_SendFloat(filter.pitch, 2);
                 UART1_SendString(",R:");
                 UART1_SendFloat(filter.roll, 2);

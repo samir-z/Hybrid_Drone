@@ -25,6 +25,15 @@
 #include "uart.h"
 #include <stdbool.h>
 
+#define TX_BUF_SIZE 256
+
+static uint8_t tx_buf[TX_BUF_SIZE];
+static volatile uint16_t tx_head = 0;
+static volatile uint16_t tx_tail = 0;
+
+volatile uint16_t pwm_duty_cycle_cmd = 0; // Variable to hold the commanded duty cycle from UART input
+volatile bool cmd_ready = false; // Flag to indicate a new command is ready to be processed
+
 /* =========================================================================
  *  FUNCTION IMPLEMENTATIONS
  * ========================================================================= */
@@ -68,19 +77,22 @@ void UART1_Init(void) {
      * RE (Receiver Enable)   : activates the RX sampling logic.
      * UE (USART Enable)      : enables the peripheral; must be set last.
      */
-    USART1->CR1 = USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
+    USART1->CR1 = USART_CR1_TE | USART_CR1_RE | USART_CR1_UE | USART_CR1_RXNEIE; // Enable RXNE interrupt for receiving commands
+
+    /* --- 5. Optional: Enable RX interrupt for non-blocking command reception --- */
+    NVIC_SetPriority(USART1_IRQn, 1); // Set priority (adjust as needed)
+    NVIC_EnableIRQ(USART1_IRQn); // Enable USART1 interrupt in NVIC (if using interrupts)
 }
 
 /* -------------------------------------------------------------------------
  *  UART1_SendChar
  * ------------------------------------------------------------------------- */
 void UART1_SendChar(char c) {
-    /*
-     * Wait until TXE = 1 (DR has been moved to the shift register and is
-     * ready to accept the next byte), then write the character to DR.
-     */
-    while (!(USART1->SR & USART_SR_TXE));
-    USART1->DR = (uint8_t)c;
+    uint16_t next_head = (tx_head + 1) % TX_BUF_SIZE;
+    while (next_head == tx_tail); // Wait for space in the buffer (blocking)
+    tx_buf[tx_head] = (uint8_t)c;
+    tx_head = next_head;
+    USART1->CR1 |= USART_CR1_TXEIE; // Enable TXE interrupt to start transmission
 }
 
 /* -------------------------------------------------------------------------
@@ -169,6 +181,37 @@ void UART1_SendFloat(float f, uint8_t decimal_places) {
             UART1_SendChar((char)(digit + '0'));
             remainder      -= (float)digit;
             decimal_places--;
+        }
+    }
+}
+
+/* -------------------------------------------------------------------------
+ *  USART1_IRQHandler
+ * ------------------------------------------------------------------------- */
+void USART1_IRQHandler(void) {
+    /* Read the status register once at the start to minimize volatile accesses. */
+    uint32_t sr = USART1->SR;
+
+    if ((USART1->CR1 & USART_CR1_TXEIE) && (sr & USART_SR_TXE)) {   /* TXE interrupt: ready to send next byte. */
+        if (tx_tail != tx_head) {   /* Buffer not empty, send next byte. */
+            USART1->DR = tx_buf[tx_tail];   /* Write next byte to data register. */
+            tx_tail = (tx_tail + 1) % TX_BUF_SIZE;  /* Move tail index forward. */
+        } else {
+            USART1->CR1 &= ~USART_CR1_TXEIE;  /* Buffer empty, disable TXE interrupt. */
+        }
+    }
+
+    /* RXNE interrupt: a new byte has been received and can be read from USART1->DR */
+    if (sr & (USART_SR_RXNE | USART_SR_ORE)) {
+        char cmd = (char)USART1->DR;  /* Reading DR clears RXNE and ORE flags; if ORE was set, the data is still valid but indicates a framing error (e.g., noise on the line). We can choose to ignore ORE for simple command parsing, or handle it as needed. */
+
+        if (sr & USART_SR_RXNE) {  /* Only process if RXNE is set, ignoring ORE for now */
+             /* Process the received command character. For simplicity, we assume commands are digits followed by a newline. */
+            if (cmd >= '0' && cmd <= '9') {
+                pwm_duty_cycle_cmd = (pwm_duty_cycle_cmd * 10) + (cmd - '0');
+            } else if (cmd == '\n') {
+                cmd_ready = true;
+            }
         }
     }
 }

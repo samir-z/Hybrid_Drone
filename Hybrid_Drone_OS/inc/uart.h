@@ -103,4 +103,11 @@ void UART1_SendInt(int32_t num);
  */
 void UART1_SendFloat(float f, uint8_t decimal_places);
 
+/** 
+ * @brief  USART1 interrupt handler.
+ *
+ *  Handles the USART1 interrupt, including transmission and reception events.
+ */
+void USART1_IRQHandler(void);
+
 #endif /* UART_H */
