@@ -18,3 +18,7 @@ media/
 
 # ===== Logs =====
 tests/logs/
+
+# ===== Content =====
+manim/
+media/
