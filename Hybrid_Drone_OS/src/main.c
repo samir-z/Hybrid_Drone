@@ -22,11 +22,17 @@
 #include "pwm.h"
 #include "imu_filter.h"
 #include "pid.h"
+#include "mixer.h"
 
 // Global variables
+SystemState_t system_state = STATE_BOOT; // Initial system state
 CF_State_t filter; // Complementary filter state
+PID_t pid_pitch; // PID controller for Pitch
+PID_t pid_roll;  // PID controller for Roll
+PID_t pid_yaw;   // PID controller for Yaw (not implemented yet)
 extern volatile uint16_t pwm_duty_cycle_cmd; // Variable to hold the commanded duty cycle from UART input
 extern volatile bool cmd_ready; // Flag to indicate a new command is ready to be processed
+bool is_armed = false; // Flag to indicate if the system is armed (PID active) or disarmed (motors locked at 0)
 
 // ===== Main =====
 int main(void) {
