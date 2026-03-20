@@ -118,6 +118,50 @@ g_pfnVectors:
     .word Default_Handler         /* IRQ38: USART2 */
     .word Default_Handler         /* IRQ39: USART6 */
     .word Default_Handler         /* IRQ40: EXTI15_10 */
+    .word Default_Handler  /* IRQ41: DMA1_Stream7 */
+    .word Default_Handler  /* IRQ42: Reservado */
+    .word Default_Handler  /* IRQ43: SDIO */
+    .word Default_Handler  /* IRQ44: TIM5 */
+    .word Default_Handler  /* IRQ45: SPI3 */
+    .word Default_Handler  /* IRQ46: Reservado */
+    .word Default_Handler  /* IRQ47: Reservado */
+    .word Default_Handler  /* IRQ48: Reservado */
+    .word Default_Handler  /* IRQ49: Reservado */
+    .word Default_Handler  /* IRQ50: TIM6_DAC */
+    .word Default_Handler  /* IRQ51: TIM7 */
+    .word Default_Handler  /* IRQ52: DMA2_Stream0 */
+    .word Default_Handler  /* IRQ53: DMA2_Stream1 */
+    .word Default_Handler  /* IRQ54: DMA2_Stream2 */
+    .word Default_Handler  /* IRQ55: DMA2_Stream3 */
+    .word Default_Handler  /* IRQ56: DMA2_Stream4 */
+    .word Default_Handler  /* IRQ57: Reservado */
+    .word Default_Handler  /* IRQ58: Reservado */
+    .word Default_Handler  /* IRQ59: Reservado */
+    .word Default_Handler  /* IRQ60: Reservado */
+    .word Default_Handler  /* IRQ61: Reservado */
+    .word Default_Handler  /* IRQ62: ETH_WKUP */
+    .word Default_Handler  /* IRQ63: Reservado */
+    .word Default_Handler  /* IRQ64: Reservado */
+    .word Default_Handler  /* IRQ65: Reservado */
+    .word Default_Handler  /* IRQ66: Reservado */
+    .word Default_Handler  /* IRQ67: DMA2_Stream5 */
+    .word Default_Handler  /* IRQ68: DMA2_Stream6 */
+    .word Default_Handler  /* IRQ69: DMA2_Stream7 */
+    .word Default_Handler  /* IRQ70: USART6 */
+    .word Default_Handler  /* IRQ71: I2C3_EV */
+    .word Default_Handler  /* IRQ72: I2C3_ER */
+    .word Default_Handler  /* IRQ73: Reservado */
+    .word Default_Handler  /* IRQ74: Reservado */
+    .word Default_Handler  /* IRQ75: Reservado */
+    .word Default_Handler  /* IRQ76: Reservado */
+    .word Default_Handler  /* IRQ77: Reservado */
+    .word Default_Handler  /* IRQ78: Reservado */
+    .word Default_Handler  /* IRQ79: Reservado */
+    .word Default_Handler  /* IRQ80: FPU */
+    .word Default_Handler  /* IRQ81: Reservado */
+    .word Default_Handler  /* IRQ82: Reservado */
+    .word Default_Handler  /* IRQ83: SPI4 */
+    .word Default_Handler  /* IRQ84: SPI5 */
 
     /* Handler por defecto para atrapar errores */
     .weak USART1_IRQHandler

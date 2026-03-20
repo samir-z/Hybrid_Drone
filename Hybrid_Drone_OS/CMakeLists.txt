@@ -61,6 +61,7 @@ set(SOURCES
     "${CMAKE_SOURCE_DIR}/src/i2c.c"
     "${CMAKE_SOURCE_DIR}/src/pwm.c"
     "${CMAKE_SOURCE_DIR}/src/imu_filter.c"
+    "${CMAKE_SOURCE_DIR}/src/pid.c"
 )
 
 # CREACIÓN DEL EJECUTABLE (El archivo .elf)

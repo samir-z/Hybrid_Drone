@@ -21,6 +21,7 @@
 #include "i2c.h"
 #include "pwm.h"
 #include "imu_filter.h"
+#include "pid.h"
 
 // Global variables
 CF_State_t filter; // Complementary filter state
@@ -108,7 +109,7 @@ int main(void) {
                 UART1_SendFloat(sensor_data.gyro_y_dps, 2);
                 UART1_SendString(",Gz:");
                 UART1_SendFloat(sensor_data.gyro_z_dps, 2);
-                UART1_SendString(",P:");y
+                UART1_SendString(",P:");
                 UART1_SendFloat(filter.pitch, 2);
                 UART1_SendString(",R:");
                 UART1_SendFloat(filter.roll, 2);
