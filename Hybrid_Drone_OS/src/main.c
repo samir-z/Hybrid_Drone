@@ -93,6 +93,16 @@ int main(void) {
             MPU6050_Data_t sensor_data;
             if (MPU6050_Read(&sensor_data) == MPU6050_OK) {
                 MPU6050_Scale(&sensor_data); // Scale raw data to physical units
+                // Rotate sensor data to match the drone's orientation (if needed - in my case)
+                float temp_ax = sensor_data.accel_x_ms2;
+                float temp_gx = sensor_data.gyro_x_dps;
+
+                sensor_data.accel_x_ms2 = -sensor_data.accel_y_ms2;
+                sensor_data.gyro_x_dps  = -sensor_data.gyro_y_dps;
+
+                sensor_data.accel_y_ms2 = temp_ax;
+                sensor_data.gyro_y_dps  = temp_gx;
+                // Rotation complete
                 CF_Update(&filter, &sensor_data, system_ticks); // Update the complementary filter with new sensor data
                 // Send scaled data over UART (for demonstration)
                 UART1_SendString("T:");
